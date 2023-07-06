@@ -49,10 +49,6 @@ class MainActivity : AppCompatActivity() {
         Places.initialize(applicationContext, "AIzaSyDnuP1SJCkVTGK77au1I0F15cZt-EamtNk")
         val placesClient = Places.createClient(this)
 
-        binding.fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
         binding.mainContainer.start.setText("0.328069,32.581292")
         binding.mainContainer.end.setText("0.289462,32.561884")
 
