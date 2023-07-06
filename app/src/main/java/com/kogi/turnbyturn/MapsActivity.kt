@@ -25,9 +25,6 @@ import com.kogi.turnbyturn.viewModel.ItemViewModel
 import com.kogi.turnbyturn.viewModel.ItemViewModelFactory
 import kotlinx.coroutines.flow.collect
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var tts: TextToSpeech
@@ -39,10 +36,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val startLat = intent.getDoubleExtra("startLat",0.0)
-        val startLng = intent.getDoubleExtra("startLng",0.0)
-        val endLat = intent.getDoubleExtra("endLat",0.0)
-        val endLng = intent.getDoubleExtra("endLng",0.0)
+        val startLat = intent.getDoubleExtra("startLat", 0.0)
+        val startLng = intent.getDoubleExtra("startLng", 0.0)
+        val endLat = intent.getDoubleExtra("endLat", 0.0)
+        val endLng = intent.getDoubleExtra("endLng", 0.0)
 
         binding.txtInstructions.text = ""
         binding.navBtn.text = "Start"
@@ -63,13 +60,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val auto = Auto.AutoBuilder().auto(2000).build()
         val costingOptions = CostingOptions.CostingOptionsBuilder().auto(auto).build()
 
-        itemViewModel.getRoute(RequestObject.Builder().
-            locations(locations as ArrayList<Locations>)
-            .units("km")
-            .id("new")
-            .costing("auto")
-            .costingOptions(costingOptions)
-        .build())
+        itemViewModel.getRoute(
+            RequestObject.Builder().locations(locations as ArrayList<Locations>)
+                .units("km")
+                .id("new")
+                .costing("auto")
+                .costingOptions(costingOptions)
+                .build()
+        )
         lifecycleScope.launchWhenCreated {
             itemViewModel.wMessage.collect {
                 when (it) {
@@ -84,21 +82,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         binding.srlFlowers.isRefreshing = false
                         val myObj = it.data as ResponseObject
                         val cords = myObj.trip?.legs?.get(0)?.shape?.let { it1 -> decode(it1) }
-
                         val coordinates = mutableListOf<LatLng>()
-
-                        if(cords != null && cords.isNotEmpty()){
-                                for(i in cords)
-                               coordinates.add(LatLng(i[0],i[1]))
-                            }
+                        if (cords != null && cords.isNotEmpty()) {
+                            for (i in cords)
+                                coordinates.add(LatLng(i[0], i[1]))
+                        }
                         myObj.trip?.summary?.length?.let { it1 ->
                             myObj.trip!!.summary?.time?.let { it2 ->
-                                setMapInit(coordinates,
+                                setMapInit(
+                                    coordinates,
                                     it1, it2
                                 )
                             }
                         }
-                        setUpNav(coordinates,myObj)
+                        setUpNav(coordinates, myObj)
 
                     }
                     is ApiState.Empty -> {
@@ -119,7 +116,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             leg.maneuvers.forEach { maneuver ->
                 //val maneuverx =Maneuvers(maneuver.beginShapeIndex,maneuver.endShapeIndex,index)
 
-                maneuver.leg=index
+                maneuver.leg = index
                 //val (beginShapeIndex, endShapeIndex: Int?) = maneuver
                 val beginShapeIndex = maneuver.beginShapeIndex;
                 val endShapeIndex = maneuver.endShapeIndex;
@@ -136,24 +133,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         binding.navBtn.setOnClickListener {
-            if(currentIndex==-1 && features.size>0) {
+            if (currentIndex == -1 && features.size > 0) {
                 currentIndex = 0
-                setFeature(features[currentIndex],true,currentIndex >= features.size-1)
-            }else if(currentIndex<features.size){
+                setFeature(features[currentIndex], true, currentIndex >= features.size - 1)
+            } else if (currentIndex < features.size) {
                 currentIndex += 1
-                setFeature(features[currentIndex],false,currentIndex >= features.size-1)
+                setFeature(features[currentIndex], false, currentIndex >= features.size - 1)
             }
         }
-
-
-
-
-       // binding.txtInstructions.setText(response.trip.legs[0].maneuvers[0].verbalPreTransitionInstruction)
-
     }
+
     var featurePolyline: Polyline? = null
 
-    private  fun createFeaturePolyLine(coordinates: List<LatLng>){
+    private fun createFeaturePolyLine(coordinates: List<LatLng>) {
         val polylineOptions = PolylineOptions()
             .addAll(coordinates)
             .color(Color.BLUE)
@@ -161,38 +153,44 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         featurePolyline = mMap.addPolyline(polylineOptions)
 
     }
-    private fun setFeature(feature: Feature,isFirst: Boolean, isLast: Boolean){
+
+    private fun setFeature(feature: Feature, isFirst: Boolean, isLast: Boolean) {
         feature.properties.instruction?.let { binding.txtInstructions.setText(it) }
 
-        if(featurePolyline==null){
+        if (featurePolyline == null) {
             createFeaturePolyLine(feature.geometry.coordinates)
-        }else{
+        } else {
             featurePolyline!!.points = feature.geometry.coordinates
         }
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(feature.geometry.coordinates[0],featureZoomLevel))
+        mMap.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                feature.geometry.coordinates[0],
+                featureZoomLevel
+            )
+        )
 
         speak(feature.properties.instruction)
 
         binding.navBtn.text = "Next"
         binding.navBtn.visibility = View.VISIBLE
-        if(isLast){
+        if (isLast) {
             binding.navBtn.text = "Done"
             binding.navBtn.visibility = View.VISIBLE
         }
     }
 
-    private fun setMapInit(coordinates: List<LatLng>,totalDistance: Double,totalTime: Double) {
+    private fun setMapInit(coordinates: List<LatLng>, totalDistance: Double, totalTime: Double) {
         val polylineOptions = PolylineOptions()
             .addAll(coordinates)
             .color(Color.RED)
             .width(10f)
         val polyline: Polyline = mMap.addPolyline(polylineOptions)
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates[0],zoomLevel))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates[0], zoomLevel))
 
         val markerstart = coordinates[0]
         mMap.addMarker(MarkerOptions().position(markerstart).title("Start"))
 
-        val markersend = coordinates[coordinates.size-1]
+        val markersend = coordinates[coordinates.size - 1]
         mMap.addMarker(MarkerOptions().position(markersend).title("End"))
 
 
@@ -211,16 +209,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         return String.format("%02d:%02d:%02d", hours, minutes, remainingSeconds)
     }
 
-    private fun speakInt(){
+    private fun speakInt() {
         tts = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 val result = tts.setLanguage(Locale.US)
 
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Toast.makeText(this@MapsActivity, "Language not supported", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MapsActivity, "Language not supported", Toast.LENGTH_SHORT)
+                        .show()
                 }
             } else {
-                Toast.makeText(this@MapsActivity, "Initialization failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MapsActivity, "Initialization failed", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
         // Add a listener to the TTS engine to handle speech completion
@@ -240,7 +240,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun speak(text: String?) {
-        if(text!=null) {
+        if (text != null) {
             val utteranceId = UUID.randomUUID().toString()
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
         }
@@ -268,9 +268,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Add a marker in Sydney and move the camera
         val kampala = LatLng(0.34, 32.58)
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(kampala,zoomLevel))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(kampala, zoomLevel))
 
     }
+
     fun decode(str: String): List<DoubleArray>? {
         val precision = 6
         var index = 0
@@ -307,6 +308,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         return coordinates
     }
+
     data class Feature(
         val type: String,
         val properties: Maneuvers,
@@ -317,9 +319,5 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val type: String,
         val coordinates: List<LatLng>
     )
-//    data class Maneuver(
-//        val begin_shape_index: Int?,
-//        val end_shape_index: Int?,
-//        var leg: Int // Mutable for setting the value later
-//    )
+
 }
