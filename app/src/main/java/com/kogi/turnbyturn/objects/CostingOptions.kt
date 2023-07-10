@@ -10,7 +10,6 @@ data class CostingOptions (
 ) {
   class CostingOptionsBuilder {
     private var auto: Auto? = null
-
     fun auto(auto: Auto?) = apply { this.auto = auto }
 
     @JvmOverloads

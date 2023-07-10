@@ -8,6 +8,9 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/auto_complete"
         android:layout_marginTop="40dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="8dp"
+        app:cardUseCompatPadding="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <LinearLayout
@@ -55,6 +58,9 @@
     <androidx.cardview.widget.CardView
         android:layout_below="@+id/auto_complete"
         android:id="@+id/cordinates"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="8dp"
+        app:cardUseCompatPadding="true"
         android:layout_marginTop="40dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

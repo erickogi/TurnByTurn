@@ -1,3 +1,5 @@
 <resources>
     <dimen name="fab_margin">48dp</dimen>
+    <dimen name="polyline_width">20dp</dimen>
+    <dimen name="polyline_rounded_radius">8dp</dimen>
 </resources>

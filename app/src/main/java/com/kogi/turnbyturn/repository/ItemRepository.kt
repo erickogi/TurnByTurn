@@ -10,14 +10,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-class ItemRepository() {
-
+class ItemRepository {
     fun getRoute(option: RequestObject) : Flow<ResponseObject> = flow {
         val optionx = Gson().toJson(option)
         println(optionx)
         val p = RetrofitClient.retrofit.getRoute(optionx)
         emit(p)
     }.flowOn(Dispatchers.IO)
-
-
 }

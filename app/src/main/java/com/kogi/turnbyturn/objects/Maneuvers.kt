@@ -31,5 +31,7 @@ data class Maneuvers (
   var travelMode: String?  = null,
   @SerializedName("travel_type")
   var travelType: String?  = null,
+  @SerializedName("street_names")
+  val streetNames: List<String>? = null,
   var leg: Int
 )

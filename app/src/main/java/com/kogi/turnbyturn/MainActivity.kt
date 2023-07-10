@@ -3,11 +3,13 @@ package com.kogi.turnbyturn
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.navigation.ui.AppBarConfiguration
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
@@ -27,13 +29,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     private lateinit var itemViewModel: ItemViewModel
-
+    private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
     private var currentField: String? = null
     private var startAutoLatLng: LatLng? = null
     private var endAutoLatLng: LatLng? = null
 
     @SuppressLint("SuspiciousIndentation")
-    @OptIn(InternalCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -42,21 +43,19 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         Places.initialize(applicationContext, "AIzaSyDnuP1SJCkVTGK77au1I0F15cZt-EamtNk")
         val placesClient = Places.createClient(this)
-
         binding.mainContainer.start.setText("0.328069,32.581292")
         binding.mainContainer.end.setText("0.289462,32.561884")
-
-
         binding.mainContainer.btn.setOnClickListener {
             if (binding.mainContainer.start.text == null || binding.mainContainer.end.text == null) {
                 Toast.makeText(this, "Set start and end locations", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
-            val intent = Intent(this, MapsActivity::class.java)
+            val intent = Intent(this, OSMMAP::class.java)
             intent.putExtra("startLat", (binding.mainContainer.start.text).split(",")[0].toDouble())
             intent.putExtra("startLng", (binding.mainContainer.start.text).split(",")[1].toDouble())
             intent.putExtra("endLat", binding.mainContainer.end.text.split(",")[0].toDouble())
             intent.putExtra("endLng", binding.mainContainer.end.text.split(",")[1].toDouble())
+           // intent.putExtra("title", binding.mainContainer.end.text.split(",")[1].toDouble())
             startActivity(intent)
         }
         binding.mainContainer.btnAuto.setOnClickListener {
@@ -64,12 +63,32 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Set start and end locations", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
-            val intent = Intent(this, MapsActivity::class.java)
+            val intent = Intent(this, OSMMAP::class.java)
             intent.putExtra("startLat", startAutoLatLng?.latitude)
             intent.putExtra("startLng", startAutoLatLng?.longitude)
             intent.putExtra("endLat", endAutoLatLng?.latitude)
             intent.putExtra("endLng", endAutoLatLng?.longitude)
             startActivity(intent)
+        }
+        binding.mainContainer.startAuto.inputType = InputType.TYPE_NULL
+        binding.mainContainer.endAuto.inputType = InputType.TYPE_NULL
+       edtListeners()
+    }
+
+    private fun edtListeners(){
+        binding.mainContainer.startAuto.setOnFocusChangeListener { _, b ->
+            if (b) {
+                currentField = "start"
+                //it.setOnClickListener(null)
+                startAutocompleteIntent(currentField!!)
+            }
+        }
+        binding.mainContainer.endAuto.setOnFocusChangeListener { _, b ->
+            if (b) {
+                currentField = "end"
+                //it.setOnClickListener(null)
+                startAutocompleteIntent(currentField!!)
+            }
         }
         binding.mainContainer.startAuto.setOnClickListener {
             currentField = "start"
@@ -95,7 +114,7 @@ class MainActivity : AppCompatActivity() {
 
         // Build the autocomplete intent with field, country, and type filters applied
         val intent: Intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
-            .setCountries(Arrays.asList("UG"))
+            .setCountries(listOf("UG"))
             .setTypesFilter(object : ArrayList<String?>() {
                 init {
                     add(TypeFilter.ADDRESS.toString().lowercase(Locale.getDefault()))
@@ -105,7 +124,7 @@ class MainActivity : AppCompatActivity() {
         startAutocomplete.launch(intent)
     }
 
-    private val startAutocomplete = registerForActivityResult<Intent, ActivityResult>(
+    private val startAutocomplete = registerForActivityResult(
         StartActivityForResult()
     ) { result: ActivityResult ->
         if (result.resultCode == RESULT_OK) {
@@ -129,6 +148,19 @@ class MainActivity : AppCompatActivity() {
             binding.mainContainer.endAuto.setText(place.name)
         }
     }
-
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        val permissionsToRequest = ArrayList<String>()
+        var i = 0
+        while (i < grantResults.size) {
+            permissionsToRequest.add(permissions[i])
+            i++
+        }
+        if (permissionsToRequest.size > 0) {
+            ActivityCompat.requestPermissions(
+                this,
+                permissionsToRequest.toTypedArray(),
+                REQUEST_PERMISSIONS_REQUEST_CODE)
+        }
+    }
 
 }
